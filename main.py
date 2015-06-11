@@ -1,6 +1,4 @@
 from matplotlib.pyplot import figure, scatter
-import pylab
-import math
 import networkx as nx
 from matplotlib import pyplot as plt
 
@@ -29,7 +27,7 @@ def dijkstra(graph_in, src, dest, visited=None, distances=None, predecessors=Non
             g_path.append(pred)
             pred = predecessors.get(pred, None)
         g_path = g_path[::-1]
-        print("Shortest path: " + str(path) + " cost=" + str(distances[dest]))
+        print("Shortest path: " + str(path[::-1]) + " cost " + str(distances[dest]))
         return path
     else:
         if not visited:
@@ -76,18 +74,17 @@ def create_nested() -> dict:
     return out
 
 if __name__ == "__main__":
-    graph = {'a': {'c': 1, 'd': 2},
-             'b': {'c': 2, 'f': 3},
-             'c': {'a': 1, 'b': 2, 'd': 1},
-             'd': {'a': 2, 'c': 1, 'g': 1},
-             'e': {'c': 3, 'f': 2},
-             'f': {'b': 3, 'g': 1},
-             'g': {'f': 1, 'd': 1}}
-
-    # graph = create_nested()
-
-    # dijkstra(graph, 'a', 'f')
-    g_path = g_path[::-1]
+    n = int(input("0. From file\n1. Manually\n"))
+    if n == 0:
+        graph = {'a': {'c': 1, 'd': 2},
+                 'b': {'c': 2, 'f': 3},
+                 'c': {'a': 1, 'b': 2, 'd': 1},
+                 'd': {'a': 2, 'c': 1, 'g': 1},
+                 'e': {'c': 3, 'f': 2},
+                 'f': {'b': 3, 'g': 1},
+                 'g': {'f': 1, 'd': 1}}
+    else:
+        graph = create_nested()
 
     G = nx.Graph(graph)
     fig = figure()
@@ -104,17 +101,17 @@ if __name__ == "__main__":
 
     def create_attributes():
         global labels, edge_labels, colors, edge_colors
-        for i in G.nodes():
-            labels[i] = i
-            for j in graph[i]:
-                edge_labels[(i, j)] = graph[i][j]
-            if i in g_path:
+        for k in G.nodes():
+            labels[k] = k
+            for j in graph[k]:
+                edge_labels[(k, j)] = graph[k][j]
+            if k in g_path:
                 colors.append('red')
             else:
                 colors.append('pink')
 
-        for i in G.edges():
-            if i[0] in g_path and i[1] in g_path:
+        for k in G.edges():
+            if k[0] in g_path and k[1] in g_path:
                 edge_colors.append('blue')
             else:
                 edge_colors.append('black')
@@ -152,7 +149,6 @@ if __name__ == "__main__":
         else:
             pass
         print("Clicked on ", G.nodes()[t])
-    scatter(*zip(*pos.values()), alpha=0.0, s=20, picker=True)
-
+    scatter(*zip(*pos.values()), alpha=1.0, s=20, picker=True)
     fig.canvas.mpl_connect('pick_event', on_pick)
     plt.show()
