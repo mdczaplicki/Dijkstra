@@ -1,10 +1,24 @@
+from matplotlib.pyplot import figure, scatter
+import pylab
+import math
 import networkx as nx
 from matplotlib import pyplot as plt
 
-def dijkstra(graph, src, dest, visited=[], distances={}, predecessors={}) -> list:
-    if src not in graph:
+g_path = []
+
+
+def dijkstra(graph_in, src, dest, visited=None, distances=None, predecessors=None) -> list:
+
+    if not predecessors:
+        predecessors = {}
+    if not distances:
+        distances = {}
+    if not visited:
+        visited = []
+    global g_path
+    if src not in graph_in:
         raise TypeError("No source in graph")
-    if dest not in graph:
+    if dest not in graph_in:
         raise TypeError("No target in graph")
 
     if src == dest:
@@ -12,16 +26,18 @@ def dijkstra(graph, src, dest, visited=[], distances={}, predecessors={}) -> lis
         pred = dest
         while pred is not None:
             path.append(pred)
+            g_path.append(pred)
             pred = predecessors.get(pred, None)
+        g_path = g_path[::-1]
         print("Shortest path: " + str(path) + " cost=" + str(distances[dest]))
         return path
     else:
         if not visited:
             distances[src] = 0
 
-        for neighbour in graph[src]:
+        for neighbour in graph_in[src]:
             if neighbour not in visited:
-                new_distance = distances[src] + graph[src][neighbour]
+                new_distance = distances[src] + graph_in[src][neighbour]
                 if new_distance < distances.get(neighbour, float('inf')):
                     distances[neighbour] = new_distance
                     predecessors[neighbour] = src
@@ -30,12 +46,13 @@ def dijkstra(graph, src, dest, visited=[], distances={}, predecessors={}) -> lis
 
         unvisited = {}
 
-        for k in graph:
+        for k in graph_in:
             if k not in visited:
                 unvisited[k] = distances.get(k, float('inf'))
         x = min(unvisited, key=unvisited.get)
 
-        dijkstra(graph, x, dest, visited, distances, predecessors)
+        dijkstra(graph_in, x, dest, visited, distances, predecessors)
+
 
 def create_nested() -> dict:
     n = int(input("How many edges?\n"))
@@ -48,7 +65,7 @@ def create_nested() -> dict:
         except ValueError:
             return inputs()
 
-    for i in range(n):
+    for j in range(n):
         first, second, length = inputs()
         if first not in out:
             out[first] = {}
@@ -61,7 +78,7 @@ def create_nested() -> dict:
 if __name__ == "__main__":
     graph = {'a': {'c': 1, 'd': 2},
              'b': {'c': 2, 'f': 3},
-             'c': {'a': 1, 'd': 1, 'b': 2},
+             'c': {'a': 1, 'b': 2, 'd': 1},
              'd': {'a': 2, 'c': 1, 'g': 1},
              'e': {'c': 3, 'f': 2},
              'f': {'b': 3, 'g': 1},
@@ -69,21 +86,73 @@ if __name__ == "__main__":
 
     # graph = create_nested()
 
-    print(str(dijkstra(graph, 'a', 'f')))
+    # dijkstra(graph, 'a', 'f')
+    g_path = g_path[::-1]
+
+    G = nx.Graph(graph)
+    fig = figure()
 
     labels = {}
     edge_labels = {}
-    for key in graph.keys():
-        labels[key] = key
-        for i in graph[key]:
-            edge_labels[(key, i)] = graph[key][i]
+    colors = []
+    edge_colors = []
 
-    G = nx.Graph(graph)
+    for i in G.nodes():
+        labels[i] = i
+        for j in graph[i]:
+            edge_labels[(i, j)] = graph[i][j]
+
+    def create_attributes():
+        global labels, edge_labels, colors, edge_colors
+        for i in G.nodes():
+            labels[i] = i
+            for j in graph[i]:
+                edge_labels[(i, j)] = graph[i][j]
+            if i in g_path:
+                colors.append('red')
+            else:
+                colors.append('pink')
+
+        for i in G.edges():
+            if i[0] in g_path and i[1] in g_path:
+                edge_colors.append('blue')
+            else:
+                edge_colors.append('black')
+
     pos = nx.spring_layout(G)
-    nx.draw_networkx_nodes(G, pos, labels, 2000,)
-    nx.draw_networkx_edges(G, pos, width=5.0)
+    nx.draw_networkx_nodes(G, pos, labels, 2000, node_color='pink')
+    nx.draw_networkx_edges(G, pos, width=5.0, edge_color='black')
     nx.draw_networkx_edge_labels(G, pos, edge_labels)
     nx.draw_networkx_labels(G, pos, labels)
 
+    def show_map():
+        nx.draw_networkx_nodes(G, pos, labels, 2000, node_color=colors)
+        nx.draw_networkx_edges(G, pos, width=5.0, edge_color=edge_colors)
+        nx.draw_networkx_edge_labels(G, pos, edge_labels)
+        nx.draw_networkx_labels(G, pos, labels)
+
+    d_s = ''
+    d_f = ''
+    d_i = 0
+
+    def on_pick(event):
+        global d_i, d_s, d_f
+        t = event.ind[0]
+        if d_i == 0:
+            d_s = G.nodes()[t]
+            d_i += 1
+        elif d_i == 1:
+            d_f = G.nodes()[t]
+            plt.cla()
+            dijkstra(graph, d_s, d_f)
+            create_attributes()
+            show_map()
+            plt.show()
+            d_i = 0
+        else:
+            pass
+        print("Clicked on ", G.nodes()[t])
+    scatter(*zip(*pos.values()), alpha=0.0, s=20, picker=True)
+
+    fig.canvas.mpl_connect('pick_event', on_pick)
     plt.show()
-    # dijkstra(graph, 'a', 'f')
