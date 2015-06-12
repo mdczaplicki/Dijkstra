@@ -78,10 +78,10 @@ if __name__ == "__main__":
     if n == 0:
         graph = {'a': {'c': 1, 'd': 2},
                  'b': {'c': 2, 'f': 3},
-                 'c': {'a': 1, 'b': 2, 'd': 1},
+                 'c': {'a': 1, 'b': 2, 'd': 1, 'e': 3},
                  'd': {'a': 2, 'c': 1, 'g': 1},
                  'e': {'c': 3, 'f': 2},
-                 'f': {'b': 3, 'g': 1},
+                 'f': {'b': 3, 'g': 1, 'e': 2},
                  'g': {'f': 1, 'd': 1}}
     else:
         graph = create_nested()
@@ -149,6 +149,6 @@ if __name__ == "__main__":
         else:
             pass
         print("Clicked on ", G.nodes()[t])
-    scatter(*zip(*pos.values()), alpha=1.0, s=20, picker=True)
+    scatter(*zip(*pos.values()), alpha=0.0, s=2000, picker=True)
     fig.canvas.mpl_connect('pick_event', on_pick)
     plt.show()
